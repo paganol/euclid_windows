@@ -26,15 +26,16 @@ sources = Win.get_camb_distributions()
 
 ## Parameters
 
-    - ``zmin``: minimum redshift, replaced if you provide the bin ranges in the variable bintype
+    - ``zmin``: minimum redshift, replaced if you provide bin ranges in the variable bintype
 
-    - ``zmax``: maximum redshift, replaced if you provide the bin ranges in the variable bintype
+    - ``zmax``: maximum redshift, replaced if you provide bin ranges in the variable bintype
 
-    - ``nbin``: number of bins, replaced if you provide the bin ranges in the variable bintype
+    - ``nbin``: number of bins, replaced if you provide bin ranges in the variable bintype
 
     - ``dz``: integration step in redshift
 
-    - ``cb``, ``zb``, ``sigmab``, ``c0``, ``z0``, ``sigma0``, ``fout``: parameters of the photo z distribution 
+    - ``cb``, ``zb``, ``sigmab``, ``c0``, ``z0``, ``sigma0``, ``fout``: parameters of the 
+    photo z distribution 
 
     - ``bintype``: three options here, "equipopulated", "equispaced", numpy array with bin edges 
 
