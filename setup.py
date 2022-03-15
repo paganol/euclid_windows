@@ -11,5 +11,6 @@ setup(
         "numpy>=1.19",
         "scipy",
 	"typing",
+        "camb>=1.3.5",
     ],
 )

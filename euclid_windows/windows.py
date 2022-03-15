@@ -17,7 +17,9 @@ class Windows:
         z0=0.1,
         sigma0=0.05,
         fout=0.1,
-        bintype: Union[str, np.ndarray] = np.array([0.001, 0.418, 0.56, 0.678, 0.789, 0.9, 1.019, 1.155, 1.324, 1.576, 2.5]),
+        bintype: Union[str, np.ndarray] = np.array(
+            [0.001, 0.418, 0.56, 0.678, 0.789, 0.9, 1.019, 1.155, 1.324, 1.576, 2.5]
+        ),
         normalize=True,
     ):
 
@@ -33,10 +35,12 @@ class Windows:
 
         self.bintype = bintype
 
-        if type(bintype) == np.ndarray: 
-            self.nbin = len(bintype)-1
+        if type(bintype) == np.ndarray:
+            self.nbin = len(bintype) - 1
             self.zmin = bintype[0]
-            self.zmax = bintype[-1]+self.dz # this adjust the last element of self.zeta
+            self.zmax = (
+                bintype[-1] + self.dz
+            )  # this adjust the last element of self.zeta
         else:
             self.nbin = nbin
             self.zmin = zmin
@@ -71,17 +75,16 @@ class Windows:
 
         return z_bin_edge
 
-
     def get_distributions(self):
         self.z_bin_edge = self.get_bins()
 
-        eta_z = np.zeros((self.nz, self.nbin), "float64")
-        gal = galaxy_distribution(self.zeta)
+        eta_z = np.zeros((self.nbin, self.nz), "float64")
+        self.gal_dist = galaxy_distribution(self.zeta)
         for ibin in range(self.nbin):
             low = self.z_bin_edge[ibin]
             hig = self.z_bin_edge[ibin + 1]
-            for inz in range(self.nz):
-                z = self.zeta[inz]
+            for iz in range(self.nz):
+                z = self.zeta[iz]
                 integrand = photo_z_distribution(
                     z,
                     self.zeta,
@@ -99,7 +102,7 @@ class Windows:
                         for index, elem in enumerate(integrand)
                     ]
                 )
-                eta_z[inz, ibin] = gal[inz] * integrate.trapz(
+                eta_z[ibin, iz] = self.gal_dist[iz] * integrate.trapz(
                     integrand,
                     self.zeta,
                 )
@@ -107,15 +110,27 @@ class Windows:
         if self.normalize:
             eta_norm = np.zeros(self.nbin, "float64")
             for ibin in range(self.nbin):
-                eta_norm[ibin] = integrate.trapz(eta_z[:, ibin],self.zeta,)
+                eta_norm[ibin] = integrate.trapz(
+                    eta_z[ibin, :],
+                    self.zeta,
+                )
 
             for ibin in range(self.nbin):
-                eta_z[:, ibin] /= eta_norm[ibin]
+                eta_z[ibin, :] /= eta_norm[ibin]
 
             self.eta_norm = eta_norm
 
         self.eta_z = eta_z
-        self.bias = np.sqrt(1 + (self.z_bin_edge[1:] + self.z_bin_edge[:-1]) / 2)
+        bias = np.sqrt(1 + (self.z_bin_edge[1:] + self.z_bin_edge[:-1]) / 2)
+
+        self.bias = np.zeros_like(self.zeta)
+        for ibin in range(self.nbin):
+            self.bias[
+                np.where(
+                    (self.zeta >= self.z_bin_edge[ibin])
+                    & (self.zeta <= self.z_bin_edge[ibin + 1])
+                )
+            ] = bias[ibin]
 
         return
 
