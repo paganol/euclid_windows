@@ -35,7 +35,7 @@ sources = Win.get_camb_distributions()
     - ``dz``: integration step in redshift
 
     - ``cb``, ``zb``, ``sigmab``, ``c0``, ``z0``, ``sigma0``, ``fout``: parameters of the 
-    photo z distribution, see equation 115 and table 5 of [1910.09273](https://arxiv.org/abs/1910.09273)
+    photo z distribution, see equation 115 and table 5 of 1910.09273
 
     - ``bintype``: three options here, "equipopulated", "equispaced", numpy array with bin edges 
 
