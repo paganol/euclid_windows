@@ -48,21 +48,21 @@ class Windows:
     def get_bins(self):
         n_tot, error = integrate.quad(galaxy_distribution, self.zmin, self.zmax)
 
-        if any(self.bintype) == "equipopulated":
+        if self.bintype == "equipopulated":
             z_bin_edge = np.zeros(self.nbin + 1, "float64") + self.zmin
             total_count = 0.0
-            for Bin in range(self.nbin - 1):
+            for ibin in range(self.nbin - 1):
                 bin_count = 0.0
-                z = z_bin_edge[Bin]
-                while bin_count <= (n_tot - total_count) / (self.nbin - Bin):
+                z = z_bin_edge[ibin]
+                while bin_count <= (n_tot - total_count) / (self.nbin - ibin):
                     gd_1 = galaxy_distribution(z)
                     gd_2 = galaxy_distribution(z + self.dz)
                     bin_count += 0.5 * (gd_1 + gd_2) * self.dz
                     z += self.dz
-                z_bin_edge[Bin + 1] = z
+                z_bin_edge[ibin + 1] = z
                 total_count += bin_count
             z_bin_edge[self.nbin] = self.zmax
-        elif any(self.bintype) == "equispaced":
+        elif self.bintype == "equispaced":
             z_bin_edge = np.linspace(self.zmin, self.zmax, self.nbin + 1)
         else:
             z_bin_edge = self.bintype
@@ -75,12 +75,12 @@ class Windows:
 
         eta_z = np.zeros((self.nz, self.nbin), "float64")
         gal = galaxy_distribution(self.zeta)
-        for Bin in range(self.nbin):
-            low = self.z_bin_edge[Bin]
-            hig = self.z_bin_edge[Bin + 1]
+        for ibin in range(self.nbin):
+            low = self.z_bin_edge[ibin]
+            hig = self.z_bin_edge[ibin + 1]
             for inz in range(self.nz):
                 z = self.zeta[inz]
-                integrand = gal * photo_z_distribution(
+                integrand = photo_z_distribution(
                     z,
                     self.zeta,
                     self.cb,
@@ -97,19 +97,17 @@ class Windows:
                         for index, elem in enumerate(integrand)
                     ]
                 )
-                eta_z[inz, Bin] = integrate.trapz(
+                eta_z[inz, ibin] = gal[inz] * integrate.trapz(
                     integrand,
                     self.zeta,
                 )
 
-#        eta_norm = np.zeros(self.nbin, "float64")
-#        for Bin in range(self.nbin):
-#            eta_norm[Bin] = np.sum(
-#                0.5 * (eta_z[1:, Bin] + eta_z[:-1, Bin]) * (self.zeta[1:] - self.zeta[:-1])
-#            )
-#
-#        for Bin in range(self.nbin):
-#            eta_z[:, Bin] /= eta_norm[Bin]
+        eta_norm = np.zeros(self.nbin, "float64")
+        for ibin in range(self.nbin):
+            eta_norm[ibin] = integrate.trapz(eta_z[:, ibin],self.zeta,)
+
+        for ibin in range(self.nbin):
+            eta_z[:, ibin] /= eta_norm[ibin]
 
         self.eta_z = eta_z
         self.bias = np.sqrt(1 + (self.z_bin_edge[1:] + self.z_bin_edge[:-1]) / 2)
