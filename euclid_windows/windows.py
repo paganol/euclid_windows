@@ -18,6 +18,7 @@ class Windows:
         sigma0=0.05,
         fout=0.1,
         bintype: Union[str, np.ndarray] = np.array([0.001, 0.418, 0.56, 0.678, 0.789, 0.9, 1.019, 1.155, 1.324, 1.576, 2.5]),
+        normalize=True,
     ):
 
         self.dz = dz
@@ -44,6 +45,7 @@ class Windows:
         self.zeta = np.arange(self.zmin, self.zmax, self.dz)
         self.nz = len(self.zeta)
 
+        self.normalize = normalize
 
     def get_bins(self):
         n_tot, error = integrate.quad(galaxy_distribution, self.zmin, self.zmax)
@@ -102,12 +104,15 @@ class Windows:
                     self.zeta,
                 )
 
-        eta_norm = np.zeros(self.nbin, "float64")
-        for ibin in range(self.nbin):
-            eta_norm[ibin] = integrate.trapz(eta_z[:, ibin],self.zeta,)
+        if self.normalize:
+            eta_norm = np.zeros(self.nbin, "float64")
+            for ibin in range(self.nbin):
+                eta_norm[ibin] = integrate.trapz(eta_z[:, ibin],self.zeta,)
 
-        for ibin in range(self.nbin):
-            eta_z[:, ibin] /= eta_norm[ibin]
+            for ibin in range(self.nbin):
+                eta_z[:, ibin] /= eta_norm[ibin]
+
+            self.eta_norm = eta_norm
 
         self.eta_z = eta_z
         self.bias = np.sqrt(1 + (self.z_bin_edge[1:] + self.z_bin_edge[:-1]) / 2)
@@ -148,7 +153,7 @@ def photo_z_distribution(
     sq2pi = np.sqrt(2 * np.pi)
 
     arg_exp_zb = -0.5 * (z - cb * zph - zb) ** 2 / (sb * (1 + z)) ** 2
-    arg_exp_z0 = -0.5 * (z - c0 * zph - zb) ** 2 / (s0 * (1 + z)) ** 2
+    arg_exp_z0 = -0.5 * (z - c0 * zph - z0) ** 2 / (s0 * (1 + z)) ** 2
 
     photo_z_dist = (1 - fout) / sq2pi / sb / (1 + z) * np.exp(
         arg_exp_zb
