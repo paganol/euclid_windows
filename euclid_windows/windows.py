@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import integrate
 from typing import Union
-
+from camb.sources import SplinedSourceWindow
 
 class Windows:
     def __init__(
@@ -134,6 +134,19 @@ class Windows:
 
         return
 
+
+    def get_camb_distributions(self):
+        sources = []
+        try:
+            self.eta_z
+        except:
+            print('Run before get_distributions')
+            exit()
+
+        for ibin in range(self.nbin):
+            sources.append(SplinedSourceWindow(bias_z = self.bias, z = self.zeta, W = self.eta_z[ibin]))
+
+        return sources
 
 def galaxy_distribution(z, zmean=0.9):
     """
