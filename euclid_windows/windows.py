@@ -3,6 +3,7 @@ from scipy import integrate
 from typing import Union
 from camb.sources import SplinedSourceWindow
 
+
 class Windows:
     def __init__(
         self,
@@ -80,32 +81,30 @@ class Windows:
 
         eta_z = np.zeros((self.nbin, self.nz), "float64")
         self.gal_dist = galaxy_distribution(self.zeta)
+
+        phz_dist = photo_z_distribution(
+            np.array([self.zeta,]* self.nz),
+            np.array([self.zeta,]* self.nz).T,
+            self.cb,
+            self.zb,
+            self.sigmab,
+            self.c0,
+            self.z0,
+            self.sigma0,
+            self.fout,
+        )
+
         for ibin in range(self.nbin):
             low = self.z_bin_edge[ibin]
             hig = self.z_bin_edge[ibin + 1]
-            for iz in range(self.nz):
-                z = self.zeta[iz]
-                integrand = photo_z_distribution(
-                    z,
-                    self.zeta,
-                    self.cb,
-                    self.zb,
-                    self.sigmab,
-                    self.c0,
-                    self.z0,
-                    self.sigma0,
-                    self.fout,
-                )
-                integrand = np.array(
-                    [
-                        elem if low <= self.zeta[index] <= hig else 0
-                        for index, elem in enumerate(integrand)
-                    ]
-                )
-                eta_z[ibin, iz] = self.gal_dist[iz] * integrate.trapz(
-                    integrand,
-                    self.zeta,
-                )
+            weight = np.zeros_like(self.zeta)
+            weight[np.where((self.zeta >= low) & (self.zeta <= hig))] = 1.0
+
+            eta_z[ibin, :] = self.gal_dist * integrate.trapz(
+                phz_dist * weight,
+                self.zeta,
+                axis=1,
+            )
 
         if self.normalize:
             eta_norm = np.zeros(self.nbin, "float64")
@@ -134,19 +133,21 @@ class Windows:
 
         return
 
-
     def get_camb_distributions(self):
         sources = []
         try:
             self.eta_z
         except:
-            print('Run before get_distributions')
+            print("Run before get_distributions")
             exit()
 
         for ibin in range(self.nbin):
-            sources.append(SplinedSourceWindow(bias_z = self.bias, z = self.zeta, W = self.eta_z[ibin]))
+            sources.append(
+                SplinedSourceWindow(bias_z=self.bias, z=self.zeta, W=self.eta_z[ibin])
+            )
 
         return sources
+
 
 def galaxy_distribution(z, zmean=0.9):
     """
@@ -178,13 +179,9 @@ def photo_z_distribution(
     Photo z distribution
     Eq. 115 and Tab. 5 of 1910.09273
     """
-    sq2pi = np.sqrt(2 * np.pi)
 
-    arg_exp_zb = -0.5 * (z - cb * zph - zb) ** 2 / (sb * (1 + z)) ** 2
-    arg_exp_z0 = -0.5 * (z - c0 * zph - z0) ** 2 / (s0 * (1 + z)) ** 2
-
-    photo_z_dist = (1 - fout) / sq2pi / sb / (1 + z) * np.exp(
-        arg_exp_zb
-    ) + fout / sq2pi / s0 / (1 + z) * np.exp(arg_exp_z0)
-
-    return photo_z_dist
+    return (1 - fout) / np.sqrt(2 * np.pi) / sb / (1 + z) * np.exp(
+        -0.5 * (z - cb * zph - zb) ** 2 / (sb * (1 + z)) ** 2
+    ) + fout / np.sqrt(2 * np.pi) / s0 / (1 + z) * np.exp(
+        -0.5 * (z - c0 * zph - z0) ** 2 / (s0 * (1 + z)) ** 2
+    )
