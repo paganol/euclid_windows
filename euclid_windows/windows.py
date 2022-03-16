@@ -83,8 +83,8 @@ class Windows:
         self.gal_dist = galaxy_distribution(self.zeta)
 
         phz_dist = photo_z_distribution(
-            np.array([self.zeta,]* self.nz),
             np.array([self.zeta,]* self.nz).T,
+            np.array([self.zeta,]* self.nz),
             self.cb,
             self.zb,
             self.sigmab,
