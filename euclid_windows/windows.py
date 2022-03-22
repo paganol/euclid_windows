@@ -53,7 +53,7 @@ class Windows:
         self.normalize = normalize
 
     def get_bins(self):
-        n_tot, error = integrate.quad(galaxy_distribution, self.zmin, self.zmax)
+        self.gal_tot, error = integrate.quad(galaxy_distribution, self.zmin, self.zmax)
 
         if self.bintype == "equipopulated":
             z_bin_edge = np.zeros(self.nbin + 1, "float64") + self.zmin
@@ -61,7 +61,7 @@ class Windows:
             for ibin in range(self.nbin - 1):
                 bin_count = 0.0
                 z = z_bin_edge[ibin]
-                while bin_count <= (n_tot - total_count) / (self.nbin - ibin):
+                while bin_count <= (self.gal_tot - total_count) / (self.nbin - ibin):
                     gd_1 = galaxy_distribution(z)
                     gd_2 = galaxy_distribution(z + self.dz)
                     bin_count += 0.5 * (gd_1 + gd_2) * self.dz
@@ -74,14 +74,16 @@ class Windows:
         else:
             z_bin_edge = self.bintype
 
-        return z_bin_edge
+        self.z_bin_edge = z_bin_edge
+
+        return
 
     def get_distributions(self):
-        self.z_bin_edge = self.get_bins()
+        self.get_bins()
 
         eta_z = np.zeros((self.nbin, self.nz), "float64")
         self.gal_dist = galaxy_distribution(self.zeta)
-
+        
         phz_dist = photo_z_distribution(
             np.array([self.zeta,]* self.nz).T,
             np.array([self.zeta,]* self.nz),
