@@ -9,6 +9,7 @@ class Windows:
         self,
         zmin=0.001,
         zmax=2.501,
+        zmaxsampled=None,
         nbin=10,
         dz=0.001,
         cb=1.0,
@@ -47,32 +48,43 @@ class Windows:
             self.zmin = zmin
             self.zmax = zmax
 
-        self.zeta = np.arange(self.zmin, self.zmax, self.dz)
+        if zmaxsampled == None:
+            self.zmaxsampled = self.zmax
+        else:
+            self.zmaxsampled = zmaxsampled
+
+        self.zeta = np.arange(self.zmin, self.zmaxsampled, self.dz)
         self.nz = len(self.zeta)
 
         self.normalize = normalize
 
     def get_bins(self):
-        self.gal_tot, error = integrate.quad(galaxy_distribution, self.zmin, self.zmax)
+        self.gal_tot, error = integrate.quad(galaxy_distribution, self.zmin, self.zmaxsampled)
 
-        if self.bintype == "equipopulated":
-            z_bin_edge = np.zeros(self.nbin + 1, "float64") + self.zmin
-            total_count = 0.0
-            for ibin in range(self.nbin - 1):
-                bin_count = 0.0
-                z = z_bin_edge[ibin]
-                while bin_count <= (self.gal_tot - total_count) / (self.nbin - ibin):
-                    gd_1 = galaxy_distribution(z)
-                    gd_2 = galaxy_distribution(z + self.dz)
-                    bin_count += 0.5 * (gd_1 + gd_2) * self.dz
-                    z += self.dz
-                z_bin_edge[ibin + 1] = z
-                total_count += bin_count
-            z_bin_edge[self.nbin] = self.zmax
-        elif self.bintype == "equispaced":
-            z_bin_edge = np.linspace(self.zmin, self.zmax, self.nbin + 1)
+        if type(self.bintype) is str:
+            if self.bintype == "equipopulated":
+                z_bin_edge = np.zeros(self.nbin + 1, "float64") + self.zmin
+                total_count = 0.0
+                for ibin in range(self.nbin - 1):
+                    bin_count = 0.0
+                    z = z_bin_edge[ibin]
+                    while bin_count <= (self.gal_tot - total_count) / (self.nbin - ibin):
+                        gd_1 = galaxy_distribution(z)
+                        gd_2 = galaxy_distribution(z + self.dz)
+                        bin_count += 0.5 * (gd_1 + gd_2) * self.dz
+                        z += self.dz
+                    z_bin_edge[ibin + 1] = z
+                    total_count += bin_count
+                z_bin_edge[self.nbin] = self.zmax
+            elif self.bintype == "equispaced":
+                z_bin_edge = np.linspace(self.zmin, self.zmax, self.nbin + 1)
+            else:
+                print("bintype not recognized, two options available: equipopulated or equispaced")
         else:
-            z_bin_edge = self.bintype
+            if type(self.bintype) is list:
+                z_bin_edge = np.array(self.bintype)
+            else:
+                z_bin_edge = self.bintype
 
         self.z_bin_edge = z_bin_edge
 
