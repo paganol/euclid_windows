@@ -24,7 +24,7 @@ class Windows:
             [0.001, 0.418, 0.56, 0.678, 0.789, 0.9, 1.019, 1.155, 1.324, 1.576, 2.5]
         ),
         normalize: bool=True,
-        biastype: Union[str, list, np.ndarray] = "piecewise",
+        biastype: Union[str, list, np.ndarray] = "stepwise",
     ):
         """
         Class meant to handle the construction of the window functions and bias.
@@ -41,7 +41,7 @@ class Windows:
         - `bintype` (``str`` or ``list`` or ``np.ndarray``):  three options here, "equipopulated", "equispace"
         numpy array or list with bin edges
         - `normalize` (``bool``): normalization of the windows
-        - `biastype` (``str`` or ``list`` or ``np.ndarray``): three options here: "picewise" with a different 
+        - `biastype` (``str`` or ``list`` or ``np.ndarray``): three options here: "stepwise" with a different 
         constant value for each bin, "continuous" which implements a continuous function (in both cases 
         $\sqrt{1+z}$ is used), or a numpy array (or list) with bias for each bin.
         """
@@ -204,7 +204,7 @@ class Windows:
         self.eta_z = eta_z
 
         if type(self.biastype) is str:
-            if self.biastype == "piecewise":
+            if self.biastype == "stepwise":
                 bias = np.sqrt(1 + (self.z_bin_edge[1:] + self.z_bin_edge[:-1]) / 2)
                 if self.nbin > 1:
                     self.bias = fill_bias(bias, self.zeta, self.z_bin_edge)

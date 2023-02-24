@@ -47,7 +47,7 @@ sources = Win.get_camb_distributions()
 
 - ``normalize``: normalization of the windows
 
-- ``biastype``: three options here: "picewise" with a different constant value for each bin,
+- ``biastype``: three options here: "stepwise" with a different constant value for each bin,
   "continuous" which implements a continuous function (in both cases $\sqrt{1+z}$ is used), or
   a numpy array (or list) with bias for each bin.
  
