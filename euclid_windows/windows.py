@@ -19,10 +19,11 @@ class Windows:
         z0=0.1,
         sigma0=0.05,
         fout=0.1,
-        bintype: Union[str, np.ndarray] = np.array(
+        bintype: Union[str, list, np.ndarray] = np.array(
             [0.001, 0.418, 0.56, 0.678, 0.789, 0.9, 1.019, 1.155, 1.324, 1.576, 2.5]
         ),
         normalize=True,
+        biastype: Union[str, list, np.ndarray] = "piecewise",
     ):
 
         self.dz = dz
@@ -37,16 +38,24 @@ class Windows:
 
         self.bintype = bintype
 
-        if type(bintype) == np.ndarray:
+        self.biastype = biastype
+
+        if type(self.bintype) is (list or np.ndarray):
             self.nbin = len(bintype) - 1
             self.zmin = bintype[0]
             self.zmax = (
                 bintype[-1] + self.dz
             )  # this adjust the last element of self.zeta
+            print("nbin, zmin, and zmax adjusted to the edges of the bintype provided")
         else:
             self.nbin = nbin
             self.zmin = zmin
             self.zmax = zmax
+
+        if type(self.biastype) is not str:
+            assert (np.size(self.biastype) == self.nbin), ("Wrong number of bias values passed!")
+            if np.size(self.biastype) == 1:
+                self.biastype = np.array(self.biastype)
 
         if zmaxsampled == None:
             self.zmaxsampled = self.zmax
@@ -79,12 +88,14 @@ class Windows:
             elif self.bintype == "equispaced":
                 z_bin_edge = np.linspace(self.zmin, self.zmax, self.nbin + 1)
             else:
-                print("bintype not recognized, two options available: equipopulated or equispaced")
+                raise ValueError("Unknown bin type " + self.bintype + ".Two options available: equipopulated or equispaced")
         else:
             if type(self.bintype) is list:
                 z_bin_edge = np.array(self.bintype)
-            else:
+            elif type(self.bintype) is np.ndarray:
                 z_bin_edge = self.bintype
+            else:
+                raise ValueError("bintype must be a string, an array or a list")                
 
         self.z_bin_edge = z_bin_edge
 
@@ -134,16 +145,26 @@ class Windows:
             self.eta_norm = eta_norm
 
         self.eta_z = eta_z
-        bias = np.sqrt(1 + (self.z_bin_edge[1:] + self.z_bin_edge[:-1]) / 2)
 
-        self.bias = np.zeros_like(self.zeta)
-        for ibin in range(self.nbin):
-            self.bias[
-                np.where(
-                    (self.zeta >= self.z_bin_edge[ibin])
-                    & (self.zeta <= self.z_bin_edge[ibin + 1])
-                )
-            ] = bias[ibin]
+        if type(self.biastype) is str:
+            if self.biastype == "piecewise":
+                bias = np.sqrt(1 + (self.z_bin_edge[1:] + self.z_bin_edge[:-1]) / 2)
+                if self.nbin > 1:
+                    self.bias = fill_bias(bias,self.zeta,self.z_bin_edge)
+                else:
+                    self.bias = np.ones_like(self.zeta) * bias
+            elif self.biastype == "continuous":
+                self.bias = np.sqrt(1 + self.zeta)
+            else:
+                raise ValueError("Unknown bias type " + self.biastype)
+        else:
+            if (type(self.biastype) is np.ndarray) or (type(self.biastype) is list):
+                if self.nbin > 1:
+                    self.bias = fill_bias(self.biastype,self.zeta,self.z_bin_edge)
+                else:
+                    self.bias = np.ones_like(self.zeta) * self.biastype
+            else:
+                raise ValueError("biastype must be a string, an array or a list")                
 
         return
 
@@ -199,3 +220,20 @@ def photo_z_distribution(
     ) + fout / np.sqrt(2 * np.pi) / s0 / (1 + z) * np.exp(
         -0.5 * (z - c0 * zph - z0) ** 2 / (s0 * (1 + z)) ** 2
     )
+
+def fill_bias(constant_bias,zetas,edges):
+    nbin = np.size(constant_bias)
+
+    assert nbin == (len(edges)-1)
+
+    bias = np.empty_like(zetas)
+    for ibin in range(nbin):
+        bias[
+            np.where(
+                (zetas >= edges[ibin])
+                & (zetas <= edges[ibin + 1])
+            )
+        ] = constant_bias[ibin]
+
+    return bias
+

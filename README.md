@@ -26,17 +26,25 @@ sources = Win.get_camb_distributions()
 
 ## Parameters
 
-    - ``zmin``: minimum redshift, replaced if you provide bin ranges in the variable bintype
+- ``zmin``: minimum redshift, replaced if you provide bin ranges in the variable bintype
 
-    - ``zmax``: maximum redshift, replaced if you provide bin ranges in the variable bintype
+- ``zmax``: maximum redshift, replaced if you provide bin ranges in the variable bintype
 
-    - ``nbin``: number of bins, replaced if you provide bin ranges in the variable bintype
+- ``zmaxsampled``: maximum redshift sampled, if not provied ``zmax`` is used 
 
-    - ``dz``: integration step in redshift
+- ``nbin``: number of bins, replaced if you provide bin ranges in the variable bintype
 
-    - ``cb``, ``zb``, ``sigmab``, ``c0``, ``z0``, ``sigma0``, ``fout``: parameters of the 
+- ``dz``: integration step in redshift
+
+- ``cb``, ``zb``, ``sigmab``, ``c0``, ``z0``, ``sigma0``, ``fout``: parameters of the 
     photo z distribution, see equation 115 and table 5 of 1910.09273
 
-    - ``bintype``: three options here, "equipopulated", "equispaced", numpy array with bin edges 
+- ``bintype``: three options here, "equipopulated", "equispaced", numpy array or list with 
+bin edges 
 
-    - ``normalize``: normalization of the windows 
+- ``normalize``: normalization of the windows
+
+- ``biastype``: three options here: "picewise" with a different constant value for each bin,
+"continuous" which implements a continuous function (in both cases $\sqrt{1+z}$ is used), or
+a numpy array (or list) with bias for each bin.
+ 
