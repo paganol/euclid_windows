@@ -110,13 +110,13 @@ class Windows:
         phz_dist = photo_z_distribution(
             np.array([self.zeta,]* self.nz).T,
             np.array([self.zeta,]* self.nz),
-            self.cb,
-            self.zb,
-            self.sigmab,
-            self.c0,
-            self.z0,
-            self.sigma0,
-            self.fout,
+            cb = self.cb,
+            zb = self.zb,
+            sb = self.sigmab,
+            c0 = self.c0,
+            z0 = self.z0,
+            s0 = self.sigma0,
+            fout = self.fout,
         )
 
         for ibin in range(self.nbin):
