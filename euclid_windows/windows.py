@@ -23,30 +23,28 @@ class Windows:
         bintype: Union[str, list, np.ndarray] = np.array(
             [0.001, 0.418, 0.56, 0.678, 0.789, 0.9, 1.019, 1.155, 1.324, 1.576, 2.5]
         ),
-        normalizeP: bool=True,
+        normalize: bool=True,
         biastype: Union[str, list, np.ndarray] = "piecewise",
     ):
-    """
-    Class meant to handle the construction of the window functions and bias.
-    It gets initialized with following paramters
-    - `zmin` (``float``): minimum redshift, replaced if you provide bin ranges in the variable bintype
-    - `zmax` (``float``): maximum redshift, replaced if you provide bin ranges in the variable bintype
-    - `zmaxsampled` (``float``): maximum redshift sampled, if not provied zmax is used
-    - `nbin` (``int``): number of bins, replaced if you provide bin ranges in the variable bintype
-    - `use_true_galactic_dist` (``bool``): use the true galactic distribution for the windows, no 
-    convolution with photo z  distribution
-    - `dz` (``float``): 
-    - `cb`, `zb`, `sigmab`, `c0`, `z0`, `sigma0`, `fout` (``float``): parameters of the photo z 
-    distribution, see equation 115 and table 5 of 1910.09273 
-    - `bintype` (``str`` or ``list`` or ``np.ndarray``):  three options here, "equipopulated", "equispaced"
-    numpy array or list with bin edges
-    - `normalize` (``bool``): normalization of the windows
-    - `biastype` (``str`` or ``list`` or ``np.ndarray``): three options here: "picewise" with a different 
-    constant value for each bin, "continuous" which implements a continuous function (in both cases 
-    $\sqrt{1+z}$ is used), or a numpy array (or list) with bias for each bin.
-
-    """
-
+        """
+        Class meant to handle the construction of the window functions and bias.
+        It can be initialized with the following paramters:
+        - `zmin` (``float``): minimum redshift, replaced if you provide bin ranges in the variable bintype
+        - `zmax` (``float``): maximum redshift, replaced if you provide bin ranges in the variable bintype
+        - `zmaxsampled` (``float``): maximum redshift sampled, if not provied zmax is used
+        - `nbin` (``int``): number of bins, replaced if you provide bin ranges in the variable bintype
+        - `use_true_galactic_dist` (``bool``): use the true galactic distribution for the windows, no 
+        convolution with photo z  distribution
+        - `dz` (``float``): 
+        - `cb`, `zb`, `sigmab`, `c0`, `z0`, `sigma0`, `fout` (``float``): parameters of the photo z 
+        distribution, see equation 115 and table 5 of 1910.09273 
+        - `bintype` (``str`` or ``list`` or ``np.ndarray``):  three options here, "equipopulated", "equispace"
+        numpy array or list with bin edges
+        - `normalize` (``bool``): normalization of the windows
+        - `biastype` (``str`` or ``list`` or ``np.ndarray``): three options here: "picewise" with a different 
+        constant value for each bin, "continuous" which implements a continuous function (in both cases 
+        $\sqrt{1+z}$ is used), or a numpy array (or list) with bias for each bin.
+        """
 
         self.dz = dz
 
