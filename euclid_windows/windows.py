@@ -146,39 +146,64 @@ class Windows:
         self.gal_dist = galaxy_distribution(self.zeta)
 
         if not self.use_true_galactic_dist:
-            phz_dist = photo_z_distribution(
-                np.array(
-                    [
-                        self.zeta,
-                    ]
-                    * self.nz
-                ).T,
-                np.array(
-                    [
-                        self.zeta,
-                    ]
-                    * self.nz
-                ),
-                cb=self.cb,
-                zb=self.zb,
-                sb=self.sigmab,
-                c0=self.c0,
-                z0=self.z0,
-                s0=self.sigma0,
-                fout=self.fout,
-            )
+            # phz_dist = photo_z_distribution(
+            #     np.array(
+            #         [
+            #             self.zeta,
+            #         ]
+            #         * self.nz
+            #     ).T,
+            #     np.array(
+            #         [
+            #             self.zeta,
+            #         ]
+            #         * self.nz
+            #     ),
+            #     cb=self.cb,
+            #     zb=self.zb,
+            #     sb=self.sigmab,
+            #     c0=self.c0,
+            #     z0=self.z0,
+            #     s0=self.sigma0,
+            #     fout=self.fout,
+            # )
+
+            # for ibin in range(self.nbin):
+            #     low = self.z_bin_edge[ibin]
+            #     hig = self.z_bin_edge[ibin + 1]
+            #     weight = np.zeros_like(self.zeta)
+            #     weight[np.where((self.zeta >= low) & (self.zeta <= hig))] = 1.0
+
+            #     eta_z[ibin, :] = self.gal_dist * integrate.trapz(
+            #         phz_dist * weight,
+            #         self.zeta,
+            #         axis=1,
+            #     )
 
             for ibin in range(self.nbin):
                 low = self.z_bin_edge[ibin]
-                hig = self.z_bin_edge[ibin + 1]
-                weight = np.zeros_like(self.zeta)
-                weight[np.where((self.zeta >= low) & (self.zeta <= hig))] = 1.0
+                hig = self.z_bin_edge[ibin + 1] 
 
-                eta_z[ibin, :] = self.gal_dist * integrate.trapz(
-                    phz_dist * weight,
-                    self.zeta,
-                    axis=1,
-                )
+                for z_ind, z_val in enumerate(self.zeta):
+                    def phz(zph,
+                            z = z_val,
+                            cb=self.cb, 
+                            zb=self.zb, 
+                            sb=self.sigmab, 
+                            c0=self.c0, 
+                            z0=self.z0, 
+                            s0=self.sigma0, 
+                            fout=self.fout):
+                
+                            return (1 - fout) / np.sqrt(2 * np.pi) / sb / (1 + z) * np.exp(
+                             -0.5 * (z - cb * zph - zb) ** 2 / (sb * (1 + z)) ** 2
+                            ) + fout / np.sqrt(2 * np.pi) / s0 / (1 + z) * np.exp(
+                            -0.5 * (z - c0 * zph - z0) ** 2 / (s0 * (1 + z)) ** 2
+                            )
+                    
+                    integral, error = integrate.quad(phz, low, hig)
+                    eta_z[ibin, z_ind] = galaxy_distribution(z_val) * integral
+
         else:
             for ibin in range(self.nbin):
                 low = self.z_bin_edge[ibin]
