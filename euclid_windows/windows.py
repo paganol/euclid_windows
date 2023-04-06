@@ -184,24 +184,8 @@ class Windows:
                 low = self.z_bin_edge[ibin]
                 hig = self.z_bin_edge[ibin + 1] 
 
-                for z_ind, z_val in enumerate(self.zeta):
-                    def phz(zph,
-                            z = z_val,
-                            cb=self.cb, 
-                            zb=self.zb, 
-                            sb=self.sigmab, 
-                            c0=self.c0, 
-                            z0=self.z0, 
-                            s0=self.sigma0, 
-                            fout=self.fout):
-                
-                            return (1 - fout) / np.sqrt(2 * np.pi) / sb / (1 + z) * np.exp(
-                             -0.5 * (z - cb * zph - zb) ** 2 / (sb * (1 + z)) ** 2
-                            ) + fout / np.sqrt(2 * np.pi) / s0 / (1 + z) * np.exp(
-                            -0.5 * (z - c0 * zph - z0) ** 2 / (s0 * (1 + z)) ** 2
-                            )
-                    
-                    integral, _ = integrate.quad(phz, low, hig)
+                for z_ind, z_val in enumerate(self.zeta):                    
+                    integral, _ = integrate.quad(photo_z_distribution, low, hig, args = (z_val,))
                     eta_z[ibin, z_ind] = galaxy_distribution(z_val) * integral
 
         else:
@@ -295,9 +279,9 @@ def galaxy_distribution(z, zmean=0.9):
 #    return photo_z_dist
 
 
-def photo_z_distribution(
-    z, 
+def photo_z_distribution( #inverted z and zph order wrt master
     zph, 
+    z, 
     cb=1.0, 
     zb=0, 
     sb=0.05, 
