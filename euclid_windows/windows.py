@@ -201,7 +201,7 @@ class Windows:
                             -0.5 * (z - c0 * zph - z0) ** 2 / (s0 * (1 + z)) ** 2
                             )
                     
-                    integral, error = integrate.quad(phz, low, hig)
+                    integral, _ = integrate.quad(phz, low, hig)
                     eta_z[ibin, z_ind] = galaxy_distribution(z_val) * integral
 
         else:
