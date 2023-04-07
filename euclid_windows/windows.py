@@ -231,8 +231,8 @@ class Windows:
             elif self.biastype == "continuous":
                 self.bias = np.sqrt(1 + self.zeta)
             #add new bias option
-            elif self.biastype == "tutusaus":
-                self.bias = tut_bias(self.zeta)
+            # elif self.biastype == "tutusaus":
+            #     self.bias = 
             else:
                 raise ValueError("Unknown bias type " + self.biastype)
         else:
