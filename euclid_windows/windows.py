@@ -136,6 +136,14 @@ class Windows:
         self.z_bin_edge = z_bin_edge
 
         return
+    
+     #New function for Tutusaus bias (Flagship1)
+    def tut_bias(z, A = 1.0, B = 2.5, C = 2.8, D=1.6):
+
+        t_bias = A + B/(1.0 + np.exp(-(z-D)*C))
+
+        return t_bias
+    
 
     def get_distributions(self):
         """
@@ -237,13 +245,6 @@ class Windows:
                 raise ValueError("biastype must be a string, an array or a list")
 
         return
-
-    #New function for Tutusaus bias (Flagship1)
-    def tut_bias(z, A = 1.0, B = 2.5, C = 2.8, D=1.6):
-
-        t_bias = A + B/(1.0 + np.exp(-(z-D)*C))
-
-        return t_bias
 
 
     def get_camb_distributions(self):
