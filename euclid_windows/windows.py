@@ -138,11 +138,13 @@ class Windows:
         return
     
      #New function for Tutusaus bias (Flagship1)
-    def tut_bias(z, A = 1.0, B = 2.5, C = 2.8, D=1.6):
+ def tut_bias(z, A = 1.0, B = 2.5, C = 2.8, D=1.6):
 
         t_bias = A + B/(1.0 + np.exp(-(z-D)*C))
 
         return t_bias
+    
+   
     
 
     def get_distributions(self):
@@ -231,8 +233,8 @@ class Windows:
             elif self.biastype == "continuous":
                 self.bias = np.sqrt(1 + self.zeta)
             #add new bias option
-            # elif self.biastype == "tutusaus":
-            #     self.bias = 
+            elif self.biastype == "tutusaus":
+                self.bias = tut_bias(self.zeta) 
             else:
                 raise ValueError("Unknown bias type " + self.biastype)
         else:
