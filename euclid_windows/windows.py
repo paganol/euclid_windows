@@ -137,15 +137,6 @@ class Windows:
 
         return
     
-     #New function for Tutusaus bias (Flagship1)
- def tut_bias(z, A = 1.0, B = 2.5, C = 2.8, D=1.6):
-
-        t_bias = A + B/(1.0 + np.exp(-(z-D)*C))
-
-        return t_bias
-    
-   
-    
 
     def get_distributions(self):
         """
@@ -329,3 +320,11 @@ def fill_bias(constant_bias, zetas, edges):
         ] = constant_bias[ibin]
 
     return bias
+
+  #New function for Tutusaus bias (Flagship1)
+def tut_bias(z, A = 1.0, B = 2.5, C = 2.8, D=1.6):
+
+    t_bias = A + B/(1.0 + np.exp(-(z-D)*C))
+
+    return t_bias
+    
