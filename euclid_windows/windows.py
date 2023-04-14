@@ -159,19 +159,20 @@ class Windows:
 
 
             # else:
+            ## modified order of the first two variables wrt master because now input1=zph and input2=z ##
             #     phz_dist = photo_z_distribution(
             #         np.array(
             #             [
             #                 self.zeta,
             #             ]
             #             * self.nz
-            #         ).T,
+            #         ),
             #         np.array(
             #             [
             #                 self.zeta,
             #             ]
             #             * self.nz
-            #         ),
+            #         ).T,
             #         cb=self.cb,
             #         zb=self.zb,
             #         sb=self.sigmab,
@@ -200,7 +201,7 @@ class Windows:
                     hig = self.z_bin_edge[ibin + 1] 
 
                     for z_ind, z_val in enumerate(self.zeta):                    
-                        integral, _ = integrate.quad(photo_z_distribution_quad, low, hig, args = (z_val,))
+                        integral, _ = integrate.quad(photo_z_distribution, low, hig, args = (z_val,))
                         eta_z[ibin, z_ind] = galaxy_distribution(z_val) * integral
 
         else:
@@ -298,30 +299,8 @@ def galaxy_distribution(z, zmean=0.9):
 #    return photo_z_dist
 
 
-def photo_z_distribution( 
-    z, 
-    zph, 
-    cb=1.0, 
-    zb=0, 
-    sb=0.05, 
-    c0=1.0, 
-    z0=0.1, 
-    s0=0.05, 
-    fout=0.1
-):
-    """
-    Photo redshift distribution
-    Eq. 115 and Tab. 5 of 1910.09273
-    """
-
-    return (1 - fout) / np.sqrt(2 * np.pi) / sb / (1 + z) * np.exp(
-        -0.5 * (z - cb * zph - zb) ** 2 / (sb * (1 + z)) ** 2
-    ) + fout / np.sqrt(2 * np.pi) / s0 / (1 + z) * np.exp(
-        -0.5 * (z - c0 * zph - z0) ** 2 / (s0 * (1 + z)) ** 2
-    )
-
+def photo_z_distribution( #z and zph inverted wrt master
 ## In the case of quad integration, z and zph have to be inverted because quad integrate over the first variable ##
-def photo_z_distribution_quad( 
     zph, 
     z, 
     cb=1.0, 
