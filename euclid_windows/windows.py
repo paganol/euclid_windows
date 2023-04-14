@@ -1,5 +1,6 @@
 import numpy as np
 from scipy import integrate
+from scipy.special import erf
 from typing import Union
 from camb.sources import SplinedSourceWindow
 
@@ -155,54 +156,71 @@ class Windows:
         self.gal_dist = galaxy_distribution(self.zeta)
 
         if not self.use_true_galactic_dist:
-            # if self.errortype == "gauss_err":
+             if self.errortype == "gauss_err":
+                z = Win_t.zeta, Win_t.cb, Win_t.zb,Win_t.sigmab, Win_t.c0, Win_t.z0, Win_t.sigma0, Win_t.fout
+                c_b=self.cb
+                z_b=self.zb
+                s_b=self.sigmab
+                c_0=self.c0
+                z_0=self.z0
+                s_0=self.sigma0
+                f_out=self.fout
 
+                for ibin in range(Win_t.nbin):
+    
+                    low = Win_t.z_bin_edge[ibin]
+                    hig = Win_t.z_bin_edge[ibin + 1]
 
-            # else:
+                    eta_z[ibin, :] = Win_t.gal_dist * ((1-f_out)/(2*c_b)) *(
+                        erf((z-c_b*low-z_b)/(np.sqrt(2)* sigma_b*(1+z))) - erf((z-c_b*hig-z_b)/(np.sqrt(2)*sigma_b*(1+z))) 
+                                    )+ Win_t.gal_dist * (f_out/(2*c_0)) *(
+                        erf((z-c_0*low-z_0)/(np.sqrt(2)* sigma_0*(1+z))) - erf((z-c_0*hig-z_0)/(np.sqrt(2)*sigma_0*(1+z)))) 
+
+            else:
             ## modified order of the first two variables wrt master because now input1=zph and input2=z ##
-            #     phz_dist = photo_z_distribution(
-            #         np.array(
-            #             [
-            #                 self.zeta,
-            #             ]
-            #             * self.nz
-            #         ),
-            #         np.array(
-            #             [
-            #                 self.zeta,
-            #             ]
-            #             * self.nz
-            #         ).T,
-            #         cb=self.cb,
-            #         zb=self.zb,
-            #         sb=self.sigmab,
-            #         c0=self.c0,
-            #         z0=self.z0,
-            #         s0=self.sigma0,
-            #         fout=self.fout,
-            #     )
-
-            #     for ibin in range(self.nbin):
-            #         low = self.z_bin_edge[ibin]
-            #         hig = self.z_bin_edge[ibin + 1]
-            #         weight = np.zeros_like(self.zeta)
-            #         weight[np.where((self.zeta >= low) & (self.zeta <= hig))] = 1.0
-
-            #         eta_z[ibin, :] = self.gal_dist * integrate.trapz(
-            #             phz_dist * weight,
-            #             self.zeta,
-            #             axis=1,
-            #         )
-
-                ## The integration with integrate.quad returns results == erf function, but requires much more time because of the for cycle ##
+                phz_dist = photo_z_distribution(
+                    np.array(
+                        [
+                            self.zeta,
+                        ]
+                        * self.nz
+                    ),
+                    np.array(
+                        [
+                            self.zeta,
+                        ]
+                        * self.nz
+                    ).T,
+                    cb=self.cb,
+                    zb=self.zb,
+                    sb=self.sigmab,
+                    c0=self.c0,
+                    z0=self.z0,
+                    s0=self.sigma0,
+                    fout=self.fout,
+                )
 
                 for ibin in range(self.nbin):
                     low = self.z_bin_edge[ibin]
-                    hig = self.z_bin_edge[ibin + 1] 
+                    hig = self.z_bin_edge[ibin + 1]
+                    weight = np.zeros_like(self.zeta)
+                    weight[np.where((self.zeta >= low) & (self.zeta <= hig))] = 1.0
 
-                    for z_ind, z_val in enumerate(self.zeta):                    
-                        integral, _ = integrate.quad(photo_z_distribution, low, hig, args = (z_val,))
-                        eta_z[ibin, z_ind] = galaxy_distribution(z_val) * integral
+                    eta_z[ibin, :] = self.gal_dist * integrate.trapz(
+                        phz_dist * weight,
+                        self.zeta,
+                        axis=1,
+                    )
+
+                ## The integration with integrate.quad returns results == erf function, but requires much more time because of the for cycle ##
+
+                # for ibin in range(self.nbin):
+                #     low = self.z_bin_edge[ibin]
+                #     hig = self.z_bin_edge[ibin + 1] 
+
+                #     for z_ind, z_val in enumerate(self.zeta):                    
+                #         integral, _ = integrate.quad(photo_z_distribution, low, hig, args = (z_val,))
+                #         eta_z[ibin, z_ind] = galaxy_distribution(z_val) * integral
 
         else:
             for ibin in range(self.nbin):
