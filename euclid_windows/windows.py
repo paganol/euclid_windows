@@ -25,6 +25,7 @@ class Windows:
         ),
         normalize: bool=True,
         biastype: Union[str, list, np.ndarray] = "stepwise",
+        errortype: Union[str, list, np.ndarray] = "gauss_err",
     ):
         """
         Class meant to handle the construction of the window functions and bias.
@@ -45,6 +46,9 @@ class Windows:
         constant value for each bin, "continuous" which implements a continuous function (in both cases 
         $\sqrt{1+z}$ is used), "tutusaus", which implements the Flagship 1 bias function (Tutusaus I. et al 2020, arXiv:2005.00055),
         or a numpy array (or list) with bias for each bin.
+        - `errortype` (``str`` or ``list`` or ``np.ndarray``): the default option is "gauss_err", because we expect a gaussian error and 
+        then we can compute the galaxy selection functions via an erf function; if the error is not gaussian, we need to compute the integral
+        to determine the galaxy selection functions.
         """
 
         self.dz = dz
@@ -60,6 +64,9 @@ class Windows:
         self.bintype = bintype
 
         self.biastype = biastype
+
+        self.errortype = errortype
+
 
         if type(self.bintype) is (list or np.ndarray):
             self.nbin = len(bintype) - 1
@@ -148,47 +155,53 @@ class Windows:
         self.gal_dist = galaxy_distribution(self.zeta)
 
         if not self.use_true_galactic_dist:
-            # phz_dist = photo_z_distribution(
-            #     np.array(
-            #         [
-            #             self.zeta,
-            #         ]
-            #         * self.nz
-            #     ).T,
-            #     np.array(
-            #         [
-            #             self.zeta,
-            #         ]
-            #         * self.nz
-            #     ),
-            #     cb=self.cb,
-            #     zb=self.zb,
-            #     sb=self.sigmab,
-            #     c0=self.c0,
-            #     z0=self.z0,
-            #     s0=self.sigma0,
-            #     fout=self.fout,
-            # )
+            # if self.errortype == "gauss_err":
 
-            # for ibin in range(self.nbin):
-            #     low = self.z_bin_edge[ibin]
-            #     hig = self.z_bin_edge[ibin + 1]
-            #     weight = np.zeros_like(self.zeta)
-            #     weight[np.where((self.zeta >= low) & (self.zeta <= hig))] = 1.0
 
-            #     eta_z[ibin, :] = self.gal_dist * integrate.trapz(
-            #         phz_dist * weight,
-            #         self.zeta,
-            #         axis=1,
+            # else:
+            #     phz_dist = photo_z_distribution(
+            #         np.array(
+            #             [
+            #                 self.zeta,
+            #             ]
+            #             * self.nz
+            #         ).T,
+            #         np.array(
+            #             [
+            #                 self.zeta,
+            #             ]
+            #             * self.nz
+            #         ),
+            #         cb=self.cb,
+            #         zb=self.zb,
+            #         sb=self.sigmab,
+            #         c0=self.c0,
+            #         z0=self.z0,
+            #         s0=self.sigma0,
+            #         fout=self.fout,
             #     )
 
-            for ibin in range(self.nbin):
-                low = self.z_bin_edge[ibin]
-                hig = self.z_bin_edge[ibin + 1] 
+            #     for ibin in range(self.nbin):
+            #         low = self.z_bin_edge[ibin]
+            #         hig = self.z_bin_edge[ibin + 1]
+            #         weight = np.zeros_like(self.zeta)
+            #         weight[np.where((self.zeta >= low) & (self.zeta <= hig))] = 1.0
 
-                for z_ind, z_val in enumerate(self.zeta):                    
-                    integral, _ = integrate.quad(photo_z_distribution, low, hig, args = (z_val,))
-                    eta_z[ibin, z_ind] = galaxy_distribution(z_val) * integral
+            #         eta_z[ibin, :] = self.gal_dist * integrate.trapz(
+            #             phz_dist * weight,
+            #             self.zeta,
+            #             axis=1,
+            #         )
+
+                ## The integration with integrate.quad returns results == erf function, but requires much more time because of the for cycle ##
+
+                for ibin in range(self.nbin):
+                    low = self.z_bin_edge[ibin]
+                    hig = self.z_bin_edge[ibin + 1] 
+
+                    for z_ind, z_val in enumerate(self.zeta):                    
+                        integral, _ = integrate.quad(photo_z_distribution_quad, low, hig, args = (z_val,))
+                        eta_z[ibin, z_ind] = galaxy_distribution(z_val) * integral
 
         else:
             for ibin in range(self.nbin):
@@ -285,7 +298,30 @@ def galaxy_distribution(z, zmean=0.9):
 #    return photo_z_dist
 
 
-def photo_z_distribution( #inverted z and zph order wrt master
+def photo_z_distribution( 
+    z, 
+    zph, 
+    cb=1.0, 
+    zb=0, 
+    sb=0.05, 
+    c0=1.0, 
+    z0=0.1, 
+    s0=0.05, 
+    fout=0.1
+):
+    """
+    Photo redshift distribution
+    Eq. 115 and Tab. 5 of 1910.09273
+    """
+
+    return (1 - fout) / np.sqrt(2 * np.pi) / sb / (1 + z) * np.exp(
+        -0.5 * (z - cb * zph - zb) ** 2 / (sb * (1 + z)) ** 2
+    ) + fout / np.sqrt(2 * np.pi) / s0 / (1 + z) * np.exp(
+        -0.5 * (z - c0 * zph - z0) ** 2 / (s0 * (1 + z)) ** 2
+    )
+
+## In the case of quad integration, z and zph have to be inverted because quad integrate over the first variable ##
+def photo_z_distribution_quad( 
     zph, 
     z, 
     cb=1.0, 
