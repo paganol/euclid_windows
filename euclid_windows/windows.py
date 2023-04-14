@@ -157,23 +157,23 @@ class Windows:
 
         if not self.use_true_galactic_dist:
             if self.errortype == "gauss_err":
-                z = self.zeta
+                z=self.zeta
                 c_b=self.cb
                 z_b=self.zb
-                s_b=self.sigmab
+                sigma_b=self.sigmab
                 c_0=self.c0
                 z_0=self.z0
-                s_0=self.sigma0
+                sigma_0=self.sigma0
                 f_out=self.fout
 
-                for ibin in range(Win_t.nbin):
+                for ibin in range(self.nbin):
     
-                    low = Win_t.z_bin_edge[ibin]
-                    hig = Win_t.z_bin_edge[ibin + 1]
+                    low = self.z_bin_edge[ibin]
+                    hig = self.z_bin_edge[ibin + 1]
 
-                    eta_z[ibin, :] = Win_t.gal_dist * ((1-f_out)/(2*c_b)) *(
+                    eta_z[ibin, :] = self.gal_dist * ((1-f_out)/(2*c_b)) *(
                         erf((z-c_b*low-z_b)/(np.sqrt(2)* sigma_b*(1+z))) - erf((z-c_b*hig-z_b)/(np.sqrt(2)*sigma_b*(1+z))) 
-                                    )+ Win_t.gal_dist * (f_out/(2*c_0)) *(
+                                  )+ self.gal_dist * (f_out/(2*c_0)) *(
                         erf((z-c_0*low-z_0)/(np.sqrt(2)* sigma_0*(1+z))) - erf((z-c_0*hig-z_0)/(np.sqrt(2)*sigma_0*(1+z)))) 
 
             else:
