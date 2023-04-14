@@ -156,7 +156,7 @@ class Windows:
         self.gal_dist = galaxy_distribution(self.zeta)
 
         if not self.use_true_galactic_dist:
-             if self.errortype == "gauss_err":
+            if self.errortype == "gauss_err":
                 z = Win_t.zeta, Win_t.cb, Win_t.zb,Win_t.sigmab, Win_t.c0, Win_t.z0, Win_t.sigma0, Win_t.fout
                 c_b=self.cb
                 z_b=self.zb
