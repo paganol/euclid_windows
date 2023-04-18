@@ -1,5 +1,6 @@
 import numpy as np
 from scipy import integrate
+from scipy.special import erf
 from typing import Union
 from camb.sources import SplinedSourceWindow
 
@@ -25,6 +26,7 @@ class Windows:
         ),
         normalize: bool=True,
         biastype: Union[str, list, np.ndarray] = "stepwise",
+        errortype: Union[str, list, np.ndarray] = "gauss_err",
     ):
         """
         Class meant to handle the construction of the window functions and bias.
@@ -44,6 +46,9 @@ class Windows:
         - `biastype` (``str`` or ``list`` or ``np.ndarray``): three options here: "stepwise" with a different 
         constant value for each bin, "continuous" which implements a continuous function (in both cases 
         $\sqrt{1+z}$ is used), or a numpy array (or list) with bias for each bin.
+         - `errortype` (``str`` or ``list`` or ``np.ndarray``): the default option is "gauss_err", because we expect a gaussian error and 
+        then we can compute the galaxy selection functions via an erf function; if the error is not gaussian, we need to compute the integral
+        to determine the galaxy selection functions.
         """
 
         self.dz = dz
@@ -59,6 +64,8 @@ class Windows:
         self.bintype = bintype
 
         self.biastype = biastype
+
+        self.errortype = errortype
 
         if type(self.bintype) is (list or np.ndarray):
             self.nbin = len(bintype) - 1
@@ -146,39 +153,72 @@ class Windows:
         self.gal_dist = galaxy_distribution(self.zeta)
 
         if not self.use_true_galactic_dist:
-            phz_dist = photo_z_distribution(
-                np.array(
-                    [
-                        self.zeta,
-                    ]
-                    * self.nz
-                ).T,
-                np.array(
-                    [
-                        self.zeta,
-                    ]
-                    * self.nz
-                ),
-                cb=self.cb,
-                zb=self.zb,
-                sb=self.sigmab,
-                c0=self.c0,
-                z0=self.z0,
-                s0=self.sigma0,
-                fout=self.fout,
-            )
+            if self.errortype == "gauss_err":
+                z=self.zeta
+                c_b=self.cb
+                z_b=self.zb
+                sigma_b=self.sigmab
+                c_0=self.c0
+                z_0=self.z0
+                sigma_0=self.sigma0
+                f_out=self.fout
 
-            for ibin in range(self.nbin):
-                low = self.z_bin_edge[ibin]
-                hig = self.z_bin_edge[ibin + 1]
-                weight = np.zeros_like(self.zeta)
-                weight[np.where((self.zeta >= low) & (self.zeta <= hig))] = 1.0
+                for ibin in range(self.nbin):
+    
+                    low = self.z_bin_edge[ibin]
+                    hig = self.z_bin_edge[ibin + 1]
 
-                eta_z[ibin, :] = self.gal_dist * integrate.trapz(
-                    phz_dist * weight,
-                    self.zeta,
-                    axis=1,
+                    eta_z[ibin, :] = self.gal_dist * ((1-f_out)/(2*c_b)) *(
+                        erf((z-c_b*low-z_b)/(np.sqrt(2)* sigma_b*(1+z))) - erf((z-c_b*hig-z_b)/(np.sqrt(2)*sigma_b*(1+z))) 
+                                  )+ self.gal_dist * (f_out/(2*c_0)) *(
+                        erf((z-c_0*low-z_0)/(np.sqrt(2)* sigma_0*(1+z))) - erf((z-c_0*hig-z_0)/(np.sqrt(2)*sigma_0*(1+z)))) 
+
+            else:
+            ## modified order of the first two variables wrt master because now input1=zph and input2=z ##
+                phz_dist = photo_z_distribution(
+                    np.array(
+                        [
+                            self.zeta,
+                        ]
+                        * self.nz
+                    ),
+                    np.array(
+                        [
+                            self.zeta,
+                        ]
+                        * self.nz
+                    ).T,
+                    cb=self.cb,
+                    zb=self.zb,
+                    sb=self.sigmab,
+                    c0=self.c0,
+                    z0=self.z0,
+                    s0=self.sigma0,
+                    fout=self.fout,
                 )
+
+                for ibin in range(self.nbin):
+                    low = self.z_bin_edge[ibin]
+                    hig = self.z_bin_edge[ibin + 1]
+                    weight = np.zeros_like(self.zeta)
+                    weight[np.where((self.zeta >= low) & (self.zeta <= hig))] = 1.0
+
+                    eta_z[ibin, :] = self.gal_dist * integrate.trapz(
+                        phz_dist * weight,
+                        self.zeta,
+                        axis=1,
+                    )
+
+                ## The integration with integrate.quad returns results == erf function, but requires much more time because of the for cycle ##
+
+                # for ibin in range(self.nbin):
+                #     low = self.z_bin_edge[ibin]
+                #     hig = self.z_bin_edge[ibin + 1] 
+
+                #     for z_ind, z_val in enumerate(self.zeta):                    
+                #         integral, _ = integrate.quad(photo_z_distribution, low, hig, args = (z_val,))
+                #   
+            
         else:
             for ibin in range(self.nbin):
                 low = self.z_bin_edge[ibin]
@@ -212,6 +252,9 @@ class Windows:
                     self.bias = np.ones_like(self.zeta) * bias
             elif self.biastype == "continuous":
                 self.bias = np.sqrt(1 + self.zeta)
+            #add new bias option
+            elif self.biastype == "tutusaus":
+                self.bias = tut_bias(self.zeta) 
             else:
                 raise ValueError("Unknown bias type " + self.biastype)
         else:
@@ -270,9 +313,10 @@ def galaxy_distribution(z, zmean=0.9):
 #    return photo_z_dist
 
 
-def photo_z_distribution(
-    z, 
+def photo_z_distribution( #z and zph inverted wrt master
+## In the case of quad integration, z and zph have to be inverted because quad integrate over the first variable ##
     zph, 
+    z, 
     cb=1.0, 
     zb=0, 
     sb=0.05, 
@@ -305,3 +349,10 @@ def fill_bias(constant_bias, zetas, edges):
         ] = constant_bias[ibin]
 
     return bias
+
+#New function for Tutusaus bias (Flagship1)
+def tut_bias(z, A = 1.0, B = 2.5, C = 2.8, D=1.6):
+
+    t_bias = A + B/(1.0 + np.exp(-(z-D)*C))
+
+    return t_bias
