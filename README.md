@@ -51,3 +51,8 @@ sources = Win.get_camb_distributions()
   "continuous" which implements a continuous function (in both cases $\sqrt{1+z}$ is used), or
   a numpy array (or list) with bias for each bin.
  
+- ``errortype``: the default option is "gauss_err", because we expect a gaussian error and 
+    then we can compute the galaxy selection functions via an erf function; if the error is not 
+    gaussian, we need to compute the integral of the probability distribution function to determine 
+    the galaxy selection functions.
+ 
