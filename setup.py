@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="euclid_windows",
-    version="0.0",
+    version="1.0",
     description="EUCLID photometric window functions",
     zip_safe=False,
     packages=find_packages(),
