@@ -43,9 +43,9 @@ class Windows:
         - `bintype` (``str`` or ``list`` or ``np.ndarray``):  three options here, "equipopulated", "equispace"
         numpy array or list with bin edges
         - `normalize` (``bool``): normalization of the windows
-        - `biastype` (``str`` or ``list`` or ``np.ndarray``): three options here: "stepwise" with a different 
+        - `biastype` (``str`` or ``list`` or ``np.ndarray``): 5 options here: "stepwise" with a different
         constant value for each bin, "continuous" which implements a continuous function (in both cases 
-        $\sqrt{1+z}$ is used), or a numpy array (or list) with bias for each bin.
+        $\sqrt{1+z}$ is used), "tutusaus_Flag1", "tutusaus_Flag2", or a numpy array (or list) with bias for each bin.
          - `errortype` (``str`` or ``list`` or ``np.ndarray``): the default option is "gauss_err", because we expect a gaussian error and 
         then we can compute the galaxy selection functions via an erf function; if the error is not gaussian, we need to compute the integral
         to determine the galaxy selection functions.
@@ -253,8 +253,12 @@ class Windows:
             elif self.biastype == "continuous":
                 self.bias = np.sqrt(1 + self.zeta)
             #add new bias option
-            elif self.biastype == "tutusaus":
-                self.bias = tut_bias(self.zeta) 
+            elif self.biastype == "tutusaus_Flag1":
+                self.bias = tut_flag1_bias(self.zeta)
+            #add new bias option
+            elif self.biastype == "tutusaus_Flag2":
+                self.bias = tut_flag2_bias(self.zeta)
+            
             else:
                 raise ValueError("Unknown bias type " + self.biastype)
         else:
@@ -351,8 +355,16 @@ def fill_bias(constant_bias, zetas, edges):
     return bias
 
 #New function for Tutusaus bias (Flagship1)
-def tut_bias(z, A = 1.0, B = 2.5, C = 2.8, D=1.6):
+def tut_flag1_bias(z, A = 1.0, B = 2.5, C = 2.8, D=1.6):
 
-    t_bias = A + B/(1.0 + np.exp(-(z-D)*C))
+    t1_bias = A + B/(1.0 + np.exp(-(z-D)*C))
 
-    return t_bias
+    return t1_bias
+    
+#New function for Tutusaus bias (Flagship2)
+def tut_flag2_bias(z, a0 = 0.8307034097903614, a1 = 1.1905472105017136, a2 = -0.9283574851541394, a3 = 0.42329232477559076):
+
+    t2_bias = a0 + a1*z + a2*z**2 + a3*z**3
+
+    return t2_bias
+
