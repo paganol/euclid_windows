@@ -26,33 +26,35 @@ sources = Win.get_camb_distributions()
 
 ## Parameters
 
-- ``zmin``: minimum redshift, replaced if you provide bin ranges in the variable bintype
+- ``zmin``: minimum redshift, replaced if you provide bin ranges in the variable bintype.
 
-- ``zmax``: maximum redshift, replaced if you provide bin ranges in the variable bintype
+- ``zmax``: maximum redshift, replaced if you provide bin ranges in the variable bintype.
 
-- ``zmaxsampled``: maximum redshift sampled, if not provied ``zmax`` is used 
+- ``zmaxsampled``: maximum redshift sampled, if not provied ``zmax`` is used. 
 
-- ``nbin``: number of bins, replaced if you provide bin ranges in the variable bintype
+- ``nbin``: number of bins, replaced if you provide bin ranges in the variable bintype.
 
 -  ``use_true_galactic_dist``: use the true galactic distribution for the windows, no 
-   convolution with photo z distribution
+   convolution with photo z distribution.
 
-- ``dz``: integration step in redshift
+- ``dz``: integration step in redshift.
 
 - ``cb``, ``zb``, ``sigmab``, ``c0``, ``z0``, ``sigma0``, ``fout``: parameters of the 
-    photo z distribution, see equation 115 and table 5 of 1910.09273
+    photo z distribution, see equation 115 and table 5 of 1910.09273.
 
 - ``bintype``: three options here, "equipopulated", "equispaced", numpy array or list with 
-  bin edges 
+  bin edges. 
 
-- ``normalize``: normalization of the windows
+- ``normalize``: normalization of the windows.
 
-- ``biastype``: three options here: "stepwise" with a different constant value for each bin,
-  "continuous" which implements a continuous function (in both cases $\sqrt{1+z}$ is used), or
-  a numpy array (or list) with bias for each bin.
+- ``biastype``: several options here:
+   - "stepwise" with a different constant value for each bin, using $f(z)=\sqrt{1+z}$;
+   - "continuous" which implements a continuous function $f(z)=\sqrt{1+z}$;
+   - "tutusaus_Flag1" which implements Tutusaus bias (Flagship1);
+   - "tutusaus_Flag2" which implements Tutusaus bias (Flagship2);
+   - numpy array (or list) with bias provided by the user for each bin.
  
 - ``errortype``: the default option is "gauss_err", because we expect a gaussian error and 
     then we can compute the galaxy selection functions via an erf function; if the error is not 
     gaussian, we need to compute the integral of the probability distribution function to determine 
     the galaxy selection functions.
- 
