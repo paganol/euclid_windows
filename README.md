@@ -30,7 +30,9 @@ sources = Win.get_camb_distributions()
 
 - ``zmax``: maximum redshift, replaced if you provide bin ranges in the variable bintype.
 
-- ``zmaxsampled``: maximum redshift sampled, if not provied ``zmax`` is used. 
+- ``zminsampled``: minimum redshift sampled, if not provided ``zmin`` is used.
+
+- ``zmaxsampled``: maximum redshift sampled, if not provided ``zmax`` is used. 
 
 - ``nbin``: number of bins, replaced if you provide bin ranges in the variable bintype.
 
