@@ -10,6 +10,7 @@ class Windows:
         self,
         zmin: float = 0.001,
         zmax: float = 2.501,
+        zminsampled: Union[float,None] = None,
         zmaxsampled: Union[float,None] = None,
         nbin: int = 10,
         use_true_galactic_dist: bool=False,
@@ -33,6 +34,7 @@ class Windows:
         It can be initialized with the following paramters:
         - `zmin` (``float``): minimum redshift, replaced if you provide bin ranges in the variable bintype
         - `zmax` (``float``): maximum redshift, replaced if you provide bin ranges in the variable bintype
+        - `zminsampled` (``float``): minimum redshift sampled, if not provied zmin is used
         - `zmaxsampled` (``float``): maximum redshift sampled, if not provied zmax is used
         - `nbin` (``int``): number of bins, replaced if you provide bin ranges in the variable bintype
         - `use_true_galactic_dist` (``bool``): use the true galactic distribution for the windows, no 
@@ -86,12 +88,17 @@ class Windows:
             if np.size(self.biastype) == 1:
                 self.biastype = np.array(self.biastype)
 
+        if zminsampled == None:
+            self.zminsampled = self.zmin
+        else:
+            self.zminsampled = zminsampled
+
         if zmaxsampled == None:
             self.zmaxsampled = self.zmax
         else:
             self.zmaxsampled = zmaxsampled
 
-        self.zeta = np.arange(self.zmin, self.zmaxsampled, self.dz)
+        self.zeta = np.arange(self.zminsampled, self.zmaxsampled, self.dz)
         self.nz = len(self.zeta)
 
         self.normalize = normalize
@@ -103,7 +110,7 @@ class Windows:
         It generates the bin edges
         """
         self.gal_tot, error = integrate.quad(
-            galaxy_distribution, self.zmin, self.zmaxsampled
+            galaxy_distribution, self.zminsampled, self.zmaxsampled
         )
 
         if type(self.bintype) is str:
