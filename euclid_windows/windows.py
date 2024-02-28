@@ -93,10 +93,14 @@ class Windows:
         else:
             self.zminsampled = zminsampled
 
+        assert self.zmin >= self.zminsampled 
+
         if zmaxsampled == None:
             self.zmaxsampled = self.zmax
         else:
             self.zmaxsampled = zmaxsampled
+
+        assert self.zmaxsampled >= self.zmax
 
         self.zeta = np.arange(self.zminsampled, self.zmaxsampled, self.dz)
         self.nz = len(self.zeta)
